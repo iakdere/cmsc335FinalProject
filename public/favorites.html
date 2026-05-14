@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Explorer - Favorites</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <a href="/" class="logo"><span>🚀</span> Space Explorer</a>
+      <ul class="nav-links">
+        <li><a href="/">Explore</a></li>
+        <li><a href="/favorites.html" class="active">Favorites</a></li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <section class="hero">
+        <h1>Your Favorites</h1>
+        <p>Your personal collection of cosmic wonders.</p>
+      </section>
+
+      <div id="message-area"></div>
+
+      <!-- Favorites load here -->
+      <div id="favorites-container"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        Space Explorer &mdash; Powered by
+        <a href="https://api.nasa.gov/" target="_blank">NASA APOD API</a>
+      </p>
+    </footer>
+
+    <script>
+      var container = document.getElementById("favorites-container");
+      var msgArea = document.getElementById("message-area");
+
+      function showMsg(text, type) {
+        msgArea.innerHTML = '<div class="message ' + type + '">' + text + "</div>";
+        setTimeout(function () {
+          msgArea.innerHTML = "";
+        }, 3000);
+      }
+
+      function deleteFav(id) {
+        fetch("/api/favorites/" + id, { method: "DELETE" })
+          .then(function (res) {
+            if (!res.ok) throw new Error();
+            var card = document.getElementById("fav-" + id);
+            if (card) card.remove();
+            showMsg("Removed from favorites.", "success");
+            /* Reload if empty */
+            if (document.querySelectorAll(".fav-card").length === 0) {
+              renderEmpty();
+            }
+          })
+          .catch(function () {
+            showMsg("Could not delete.", "error");
+          });
+      }
+
+      function renderEmpty() {
+        container.innerHTML =
+          '<div class="empty-state">' +
+          "<span>🌌</span>" +
+          "<p>No favorites yet. Go explore and save some!</p>" +
+          "<br />" +
+          '<a href="/" class="btn btn-primary">Start Exploring</a>' +
+          "</div>";
+      }
+
+      function renderFavorites(favorites) {
+        if (favorites.length === 0) {
+          renderEmpty();
+          return;
+        }
+
+        var html = '<div class="favorites-grid">';
+        for (var i = 0; i < favorites.length; i++) {
+          var fav = favorites[i];
+          var image;
+          if (fav.mediaType === "image") {
+            image = '<img src="' + fav.url + '" alt="' + fav.title + '" />';
+          } else {
+            image =
+              '<div style="height:200px;background:#14143280;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎬</div>';
+          }
+
+          html +=
+            '<div class="fav-card" id="fav-' + fav._id + '">' +
+            image +
+            '<div class="fav-card-body">' +
+            "<h3>" + fav.title + "</h3>" +
+            '<div class="date">' + fav.date + "</div>" +
+            "<p>" + fav.explanation + "</p>" +
+            "</div>" +
+            '<div class="fav-card-actions">' +
+            '<button class="btn btn-danger" onclick="deleteFav(\'' +
+            fav._id +
+            "')\">" +
+            "Remove</button>" +
+            "</div>" +
+            "</div>";
+        }
+        html += "</div>";
+        container.innerHTML = html;
+      }
+
+      /* ── Load favorites from the API ───────────────── */
+      fetch("/api/favorites")
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          renderFavorites(data);
+        })
+        .catch(function () {
+          container.innerHTML =
+            '<div class="empty-state"><span>⚠️</span><p>Could not load favorites.</p></div>';
+        });
+    </script>
+  </body>
+</html>

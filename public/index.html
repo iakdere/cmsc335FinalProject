@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Explorer</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <a href="/" class="logo"><span>🚀</span> Space Explorer</a>
+      <ul class="nav-links">
+        <li><a href="/" class="active">Explore</a></li>
+        <li><a href="/favorites.html">Favorites</a></li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <!-- Hero -->
+      <section class="hero">
+        <h1>Explore the Cosmos</h1>
+        <p>
+          Discover NASA's Astronomy Picture of the Day. Search by date or load
+          random cosmic wonders.
+        </p>
+      </section>
+
+      <!-- Search Form -->
+      <form id="search-form" class="search-section">
+        <input type="date" id="date-input" min="1995-06-16" />
+        <button type="button" class="btn btn-primary" onclick="searchByDate()">
+          Search Date
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="loadToday()">
+          Today
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="loadRandom()">
+          Random
+        </button>
+      </form>
+
+      <!-- Message area -->
+      <div id="message-area"></div>
+
+      <!-- Loader -->
+      <div id="loader" class="loader">
+        <div class="spinner"></div>
+        <p>Reaching the stars&hellip;</p>
+      </div>
+
+      <!-- APOD display area -->
+      <div id="apod-display"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        Space Explorer &mdash; Powered by
+        <a href="https://api.nasa.gov/" target="_blank">NASA APOD API</a>
+      </p>
+    </footer>
+
+    <script>
+      /* ── Set max date to today ─────────────────────── */
+      const dateInput = document.getElementById("date-input");
+      dateInput.max = new Date().toISOString().split("T")[0];
+
+      const loader = document.getElementById("loader");
+      const display = document.getElementById("apod-display");
+      const msgArea = document.getElementById("message-area");
+
+      /* ── Helpers ────────────────────────────────────── */
+      function showMsg(text, type) {
+        msgArea.innerHTML = '<div class="message ' + type + '">' + text + "</div>";
+        setTimeout(function () {
+          msgArea.innerHTML = "";
+        }, 4000);
+      }
+
+      function showLoader() {
+        loader.classList.add("active");
+        display.innerHTML = "";
+      }
+
+      function hideLoader() {
+        loader.classList.remove("active");
+      }
+
+      function renderApod(data) {
+        var media;
+        if (data.media_type === "video") {
+          media = '<iframe src="' + data.url + '" allowfullscreen></iframe>';
+        } else {
+          media = '<img src="' + data.url + '" alt="' + data.title + '" />';
+        }
+
+        var saveData = JSON.stringify({
+          title: data.title,
+          date: data.date,
+          explanation: data.explanation,
+          url: data.url,
+          mediaType: data.media_type,
+        });
+
+        display.innerHTML =
+          '<div class="apod-card">' +
+          media +
+          '<div class="apod-info">' +
+          "<h2>" + data.title + "</h2>" +
+          '<div class="apod-date">' + data.date + "</div>" +
+          "<p>" + data.explanation + "</p>" +
+          "</div>" +
+          '<div class="apod-actions">' +
+          "<button class=\"btn btn-save\" onclick='saveFavorite(" +
+          saveData.replace(/'/g, "\\'") +
+          ")'>★ Save to Favorites</button>" +
+          "</div>" +
+          "</div>";
+      }
+
+      /* ── API Calls ─────────────────────────────────── */
+      function loadToday() {
+        showLoader();
+        fetch("/api/apod")
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data.error) throw new Error(data.error);
+            hideLoader();
+            renderApod(data);
+          })
+          .catch(function () {
+            hideLoader();
+            showMsg("Could not load today's picture.", "error");
+          });
+      }
+
+      function searchByDate() {
+        var date = dateInput.value;
+        if (!date) {
+          showMsg("Please pick a date first.", "error");
+          return;
+        }
+        showLoader();
+        fetch("/api/apod/" + date)
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (data.error || data.code) throw new Error();
+            hideLoader();
+            renderApod(data);
+          })
+          .catch(function () {
+            hideLoader();
+            showMsg("Could not load picture for that date.", "error");
+          });
+      }
+
+      function loadRandom() {
+        showLoader();
+        fetch("/api/apod-random/1")
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (!Array.isArray(data) || data.length === 0) throw new Error();
+            hideLoader();
+            renderApod(data[0]);
+          })
+          .catch(function () {
+            hideLoader();
+            showMsg("Could not load a random picture.", "error");
+          });
+      }
+
+      function saveFavorite(item) {
+        fetch("/api/favorites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        })
+          .then(function (res) {
+            if (res.status === 409) {
+              showMsg("This one is already in your favorites!", "error");
+              throw new Error("duplicate");
+            }
+            if (!res.ok) throw new Error();
+            showMsg("Saved to favorites! ★", "success");
+          })
+          .catch(function (err) {
+            if (err.message !== "duplicate") {
+              showMsg("Failed to save.", "error");
+            }
+          });
+      }
+
+      /* ── Load today's picture on page load ─────────── */
+      loadToday();
+    </script>
+  </body>
+</html>
