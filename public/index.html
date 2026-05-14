@@ -69,6 +69,7 @@
       const loader = document.getElementById("loader");
       const display = document.getElementById("apod-display");
       const msgArea = document.getElementById("message-area");
+      var currentApod = null;
 
       /* ── Helpers ────────────────────────────────────── */
       function showMsg(text, type) {
@@ -95,13 +96,13 @@
           media = '<img src="' + data.url + '" alt="' + data.title + '" />';
         }
 
-        var saveData = JSON.stringify({
+        currentApod = {
           title: data.title,
           date: data.date,
           explanation: data.explanation,
           url: data.url,
           mediaType: data.media_type,
-        });
+        };
 
         display.innerHTML =
           '<div class="apod-card">' +
@@ -112,9 +113,7 @@
           "<p>" + data.explanation + "</p>" +
           "</div>" +
           '<div class="apod-actions">' +
-          "<button class=\"btn btn-save\" onclick='saveFavorite(" +
-          saveData.replace(/'/g, "\\'") +
-          ")'>★ Save to Favorites</button>" +
+          "<button class=\"btn btn-save\" onclick='saveFavorite(currentApod)'>★ Save to Favorites</button>" +
           "</div>" +
           "</div>";
       }
