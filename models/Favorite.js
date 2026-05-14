@@ -9,4 +9,4 @@ const favoriteSchema = new mongoose.Schema({
   savedAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("Favorite", favoriteSchema);
+module.exports = mongoose.model("Favorite", favoriteSchema, "APOD-Favorites");
