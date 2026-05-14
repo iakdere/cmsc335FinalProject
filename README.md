@@ -1,4 +1,4 @@
-# Space Explorer 🚀
+﻿# Space Explorer ðŸš€
 
 Submitted by: **YOUR_NAME (YOUR_DIRECTORY_ID)**
 
@@ -46,3 +46,4 @@ AI Use: 1. Claude
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
