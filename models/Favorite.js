@@ -6,6 +6,7 @@ const favoriteSchema = new mongoose.Schema({
   explanation: { type: String, required: true },
   url: { type: String, required: true },
   mediaType: { type: String, default: "image" },
+  note: { type: String, default: "" },
   savedAt: { type: Date, default: Date.now },
 });
 

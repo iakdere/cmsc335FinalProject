@@ -47,12 +47,12 @@ router.get("/apod-random/:count", async (req, res) => {
 /* ── Save a favorite (form POST) ──────────────────────── */
 router.post("/favorites", async (req, res) => {
   try {
-    const { title, date, explanation, url, mediaType } = req.body;
+    const { title, date, explanation, url, mediaType, note } = req.body;
     const existing = await Favorite.findOne({ date });
     if (existing) {
       return res.status(409).json({ error: "Already saved!" });
     }
-    const fav = new Favorite({ title, date, explanation, url, mediaType });
+    const fav = new Favorite({ title, date, explanation, url, mediaType, note: note || "" });
     await fav.save();
     res.status(201).json(fav);
   } catch (err) {

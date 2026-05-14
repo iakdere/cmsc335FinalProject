@@ -113,9 +113,40 @@
           "<p>" + data.explanation + "</p>" +
           "</div>" +
           '<div class="apod-actions">' +
-          "<button class=\"btn btn-save\" onclick='saveFavorite(currentApod)'>★ Save to Favorites</button>" +
+          "<button class=\"btn btn-save\" onclick='showNoteForm()'>★ Save to Favorites</button>" +
           "</div>" +
+          '<form id="note-form" class="note-form" style="display:none" onsubmit="submitFavorite(event)">' +
+          '<label for="note-input">Add a personal note (optional):</label>' +
+          '<textarea id="note-input" name="note" rows="3" maxlength="500" placeholder="What makes this image special to you?"></textarea>' +
+          '<div class="note-form-actions">' +
+          '<button type="submit" class="btn btn-save">Save Favorite</button>' +
+          '<button type="button" class="btn btn-secondary" onclick="hideNoteForm()">Cancel</button>' +
+          "</div>" +
+          "</form>" +
           "</div>";
+      }
+
+      function showNoteForm() {
+        var form = document.getElementById("note-form");
+        if (form) {
+          form.style.display = "block";
+          document.getElementById("note-input").focus();
+        }
+      }
+
+      function hideNoteForm() {
+        var form = document.getElementById("note-form");
+        if (form) {
+          form.style.display = "none";
+          document.getElementById("note-input").value = "";
+        }
+      }
+
+      function submitFavorite(event) {
+        event.preventDefault();
+        var note = document.getElementById("note-input").value.trim();
+        saveFavorite(currentApod, note);
+        hideNoteForm();
       }
 
       /* ── API Calls ─────────────────────────────────── */
@@ -169,11 +200,11 @@
           });
       }
 
-      function saveFavorite(item) {
+      function saveFavorite(item, note) {
         fetch("/api/favorites", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item),
+          body: JSON.stringify(Object.assign({}, item, { note: note || "" })),
         })
           .then(function (res) {
             if (res.status === 409) {
