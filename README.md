@@ -1,4 +1,4 @@
-﻿# Space Explorer ðŸš€
+﻿# Space Explorer
 
 Submitted by: **YOUR_NAME (YOUR_DIRECTORY_ID)**
 
